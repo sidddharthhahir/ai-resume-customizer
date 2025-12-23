@@ -1,11 +1,22 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users, 
+  resumes, 
+  jobDescriptions, 
+  customizations,
+  InsertResume,
+  InsertJobDescription,
+  InsertCustomization,
+  Resume,
+  JobDescription,
+  Customization
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -89,4 +100,121 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Resume operations
+export async function createResume(resume: InsertResume): Promise<Resume> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(resumes).values(resume);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(resumes).where(eq(resumes.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted resume");
+  
+  return inserted[0];
+}
+
+export async function getResumeById(id: number): Promise<Resume | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(resumes).where(eq(resumes.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getUserResumes(userId: number): Promise<Resume[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(resumes).where(eq(resumes.userId, userId)).orderBy(desc(resumes.createdAt));
+}
+
+// Job description operations
+export async function createJobDescription(job: InsertJobDescription): Promise<JobDescription> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(jobDescriptions).values(job);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(jobDescriptions).where(eq(jobDescriptions.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted job description");
+  
+  return inserted[0];
+}
+
+export async function getJobDescriptionById(id: number): Promise<JobDescription | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(jobDescriptions).where(eq(jobDescriptions.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getUserJobDescriptions(userId: number): Promise<JobDescription[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(jobDescriptions).where(eq(jobDescriptions.userId, userId)).orderBy(desc(jobDescriptions.createdAt));
+}
+
+// Customization operations
+export async function createCustomization(customization: InsertCustomization): Promise<Customization> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(customizations).values(customization);
+  const insertedId = Number(result[0].insertId);
+  
+  const inserted = await db.select().from(customizations).where(eq(customizations.id, insertedId)).limit(1);
+  if (!inserted[0]) throw new Error("Failed to retrieve inserted customization");
+  
+  return inserted[0];
+}
+
+export async function getCustomizationById(id: number): Promise<Customization | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(customizations).where(eq(customizations.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getUserCustomizations(userId: number): Promise<Customization[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(customizations).where(eq(customizations.userId, userId)).orderBy(desc(customizations.createdAt));
+}
+
+export async function getCustomizationByResumeAndJob(
+  resumeId: number, 
+  jobId: number
+): Promise<Customization | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(customizations)
+    .where(and(eq(customizations.resumeId, resumeId), eq(customizations.jobId, jobId)))
+    .orderBy(desc(customizations.createdAt))
+    .limit(1);
+  
+  return result[0];
+}
+
+export async function updateCustomizationFiles(
+  id: number,
+  files: {
+    resumePdfUrl?: string;
+    resumeDocxUrl?: string;
+    coverLetterPdfUrl?: string;
+    coverLetterDocxUrl?: string;
+  }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(customizations).set(files).where(eq(customizations.id, id));
+}
