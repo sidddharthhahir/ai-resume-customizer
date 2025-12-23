@@ -1,7 +1,8 @@
 import PDFDocument from 'pdfkit';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun } from 'docx';
 import { CustomizedResume } from '../../drizzle/schema';
 import { storagePut } from '../storage';
+import axios from 'axios';
 
 /**
  * Generate sanitized filename for downloads
@@ -16,8 +17,20 @@ function sanitizeFilename(text: string): string {
 export async function generateResumePDF(
   customizedResume: CustomizedResume,
   companyName: string,
-  roleName: string
+  roleName: string,
+  photoUrl?: string
 ): Promise<{ url: string; key: string }> {
+  // Fetch photo before creating PDF (if provided)
+  let photoBuffer: Buffer | undefined;
+  if (photoUrl) {
+    try {
+      const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
+      photoBuffer = Buffer.from(response.data);
+    } catch (error) {
+      console.error('Failed to fetch photo:', error);
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50 });
     const chunks: Buffer[] = [];
@@ -25,12 +38,12 @@ export async function generateResumePDF(
     doc.on('data', (chunk) => chunks.push(chunk));
     doc.on('end', async () => {
       try {
-        const buffer = Buffer.concat(chunks);
+        const pdfBuffer = Buffer.concat(chunks);
+        const timestamp = Date.now();
         const sanitizedCompany = sanitizeFilename(companyName);
         const sanitizedRole = sanitizeFilename(roleName);
-        const filename = `Resume_${sanitizedCompany}_${sanitizedRole}_${Date.now()}.pdf`;
-        
-        const result = await storagePut(filename, buffer, 'application/pdf');
+        const fileKey = `resumes/Resume_${sanitizedCompany}_${sanitizedRole}_${timestamp}.pdf`;
+        const result = await storagePut(fileKey, pdfBuffer, 'application/pdf');
         resolve(result);
       } catch (error) {
         reject(error);
@@ -38,7 +51,27 @@ export async function generateResumePDF(
     });
 
     // Title
-    doc.fontSize(20).font('Helvetica-Bold').text('RESUME', { align: 'center' });
+    const pageWidth = doc.page.width;
+    const pageMargin = 50;
+    const photoSize = 100;
+    
+    if (photoBuffer) {
+      // Add photo in top-right corner
+      doc.image(photoBuffer, pageWidth - pageMargin - photoSize, pageMargin, {
+        width: photoSize,
+        height: photoSize,
+        fit: [photoSize, photoSize],
+        align: 'center',
+        valign: 'center'
+      });
+    }
+    
+    // Title (left-aligned to avoid photo)
+    const titleWidth = photoBuffer ? pageWidth - 2 * pageMargin - photoSize - 20 : pageWidth - 2 * pageMargin;
+    doc.fontSize(20).font('Helvetica-Bold').text('RESUME', pageMargin, pageMargin, { 
+      width: titleWidth,
+      align: 'left' 
+    });
     doc.moveDown();
 
     // Summary
@@ -111,9 +144,40 @@ export async function generateResumePDF(
 export async function generateResumeDOCX(
   customizedResume: CustomizedResume,
   companyName: string,
-  roleName: string
+  roleName: string,
+  photoUrl?: string
 ): Promise<{ url: string; key: string }> {
+  // Fetch photo before creating DOCX (if provided)
+  let photoBuffer: Buffer | undefined;
+  if (photoUrl) {
+    try {
+      const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
+      photoBuffer = Buffer.from(response.data);
+    } catch (error) {
+      console.error('Failed to fetch photo for DOCX:', error);
+    }
+  }
+
   const sections: Paragraph[] = [];
+
+  // Add photo if provided (top-right)
+  if (photoBuffer) {
+    sections.push(
+      new Paragraph({
+        children: [
+          new ImageRun({
+            type: 'png',
+            data: photoBuffer,
+            transformation: {
+              width: 100,
+              height: 100,
+            },
+          }),
+        ],
+        alignment: AlignmentType.RIGHT,
+      })
+    );
+  }
 
   // Title
   sections.push(

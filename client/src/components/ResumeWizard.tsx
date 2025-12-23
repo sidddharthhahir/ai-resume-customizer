@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import UploadStep from './wizard/UploadStep';
 import JobDescriptionStep from './wizard/JobDescriptionStep';
+import PhotoUploadStep from './wizard/PhotoUploadStep';
 import MatchAnalysisStep from './wizard/MatchAnalysisStep';
 import ResumePreviewStep from './wizard/ResumePreviewStep';
 import DownloadStep from './wizard/DownloadStep';
@@ -13,15 +14,17 @@ import type { Resume, JobDescription, Customization } from '../../../drizzle/sch
 const STEPS = [
   { id: 1, title: 'Upload Resume', description: 'Upload your resume (PDF or DOCX)' },
   { id: 2, title: 'Job Description', description: 'Paste the job description' },
-  { id: 3, title: 'Match Analysis', description: 'Review your match score and gaps' },
-  { id: 4, title: 'Customized Resume', description: 'Preview optimized resume' },
-  { id: 5, title: 'Download', description: 'Download your files' },
+  { id: 3, title: 'Profile Photo', description: 'Optional: Add a profile photo' },
+  { id: 4, title: 'Match Analysis', description: 'Review your match score and gaps' },
+  { id: 5, title: 'Customized Resume', description: 'Preview optimized resume' },
+  { id: 6, title: 'Download', description: 'Download your files' },
 ];
 
 export default function ResumeWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [resume, setResume] = useState<Resume | null>(null);
   const [job, setJob] = useState<JobDescription | null>(null);
+  const [photoData, setPhotoData] = useState<{ includePhoto: boolean; photoUrl?: string; photoKey?: string } | null>(null);
   const [customization, setCustomization] = useState<Customization | null>(null);
 
   const progress = (currentStep / STEPS.length) * 100;
@@ -41,7 +44,8 @@ export default function ResumeWizard() {
   const canGoNext = () => {
     if (currentStep === 1) return resume !== null;
     if (currentStep === 2) return job !== null;
-    if (currentStep === 3) return customization !== null;
+    if (currentStep === 3) return photoData !== null;
+    if (currentStep === 4) return customization !== null;
     return true;
   };
 
@@ -86,13 +90,25 @@ export default function ResumeWizard() {
           <CardContent className="min-h-[400px]">
             {currentStep === 1 && <UploadStep onComplete={setResume} />}
             {currentStep === 2 && <JobDescriptionStep onComplete={setJob} />}
-            {currentStep === 3 && resume && job && (
-              <MatchAnalysisStep resume={resume} job={job} onComplete={setCustomization} />
+            {currentStep === 3 && (
+              <PhotoUploadStep
+                onComplete={(includePhoto, photoUrl, photoKey) =>
+                  setPhotoData({ includePhoto, photoUrl, photoKey })
+                }
+              />
             )}
-            {currentStep === 4 && customization && (
+            {currentStep === 4 && resume && job && photoData && (
+              <MatchAnalysisStep
+                resume={resume}
+                job={job}
+                photoData={photoData}
+                onComplete={setCustomization}
+              />
+            )}
+            {currentStep === 5 && customization && (
               <ResumePreviewStep customization={customization} />
             )}
-            {currentStep === 5 && customization && <DownloadStep customization={customization} />}
+            {currentStep === 6 && customization && <DownloadStep customization={customization} />}
           </CardContent>
         </Card>
 

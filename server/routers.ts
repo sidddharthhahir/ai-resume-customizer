@@ -126,11 +126,42 @@ export const appRouter = router({
   }),
 
   customization: router({
+    // Upload profile photo
+    uploadPhoto: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileData: z.string(), // base64 encoded
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Validate mime type
+        if (!['image/jpeg', 'image/jpg', 'image/png'].includes(input.mimeType)) {
+          throw new Error('Only JPG and PNG images are supported');
+        }
+
+        // Decode base64 file data
+        const buffer = Buffer.from(input.fileData, 'base64');
+        
+        // Validate file size (max 5MB)
+        if (buffer.length > 5 * 1024 * 1024) {
+          throw new Error('Photo size must be less than 5MB');
+        }
+        
+        // Upload to S3
+        const fileKey = `photos/${ctx.user.id}/${Date.now()}_${input.fileName}`;
+        const { url: photoUrl, key: photoKey } = await storagePut(fileKey, buffer, input.mimeType);
+        
+        return { photoUrl, photoKey };
+      }),
+
     // Create full customization (match + customize + cover letter)
     create: protectedProcedure
       .input(z.object({
         resumeId: z.number(),
         jobId: z.number(),
+        includePhoto: z.boolean().optional(),
+        photoUrl: z.string().optional(),
+        photoKey: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Get resume and job
@@ -172,6 +203,9 @@ export const appRouter = router({
           customizedResume: customized,
           coverLetter,
           explanation,
+          includePhoto: input.includePhoto ? 1 : 0,
+          photoUrl: input.photoUrl || null,
+          photoKey: input.photoKey || null,
           resumePdfUrl: null,
           resumeDocxUrl: null,
           coverLetterPdfUrl: null,
@@ -202,9 +236,10 @@ export const appRouter = router({
         const roleName = job.roleName || 'Role';
         
         // Generate all files
+        const photoUrl = customization.includePhoto ? customization.photoUrl || undefined : undefined;
         const [resumePdf, resumeDocx, coverLetterPdf, coverLetterDocx] = await Promise.all([
-          generateResumePDF(customization.customizedResume, companyName, roleName),
-          generateResumeDOCX(customization.customizedResume, companyName, roleName),
+          generateResumePDF(customization.customizedResume, companyName, roleName, photoUrl),
+          generateResumeDOCX(customization.customizedResume, companyName, roleName, photoUrl),
           generateCoverLetterPDF(customization.coverLetter, companyName, roleName),
           generateCoverLetterDOCX(customization.coverLetter, companyName, roleName),
         ]);

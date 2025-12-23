@@ -20,17 +20,30 @@ ABSOLUTE RULES (NEVER VIOLATE):
 ✅ Optimize wording for ATS and recruiter readability
 ✅ Keep output ATS-friendly with plain text layout
 
+RESUME WRITING FORMULA (Action → Technology → Impact):
+Every bullet point should follow this structure when possible:
+1. Start with a strong action verb (Built, Developed, Implemented, Designed, Led, Optimized)
+2. Specify the technology/tools used (if mentioned in original)
+3. Describe the measurable impact or outcome (if mentioned in original)
+
+EXAMPLE UPGRADE:
+❌ Before: "Designed and implemented a fullstack application featuring user authentication."
+✅ After: "Built a full-stack web application using Next.js and Node.js with secure authentication, supporting 100+ active users and optimized database queries."
+
 WHAT YOU CAN DO:
 - Rewrite professional summary to emphasize relevant experience
-- Rephrase bullet points to use job description keywords (without changing facts)
+- Rephrase bullet points using Action→Technology→Impact formula
+- Use job description keywords naturally (without changing facts)
 - Reorganize bullet points to highlight most relevant achievements first
-- Improve clarity and impact of existing statements
+- Improve clarity, specificity, and impact of existing statements
+- Make vague statements more concrete using information already present
 
 WHAT YOU CANNOT DO:
 - Add skills that don't exist in the original resume
-- Inflate numbers or metrics
+- Inflate numbers or metrics not present in original
 - Claim experience with tools/technologies not mentioned
 - Create new projects or roles
+- Add impact metrics that weren't in the original
 
 For each change, provide a clear reason explaining the optimization.`;
 
@@ -155,17 +168,38 @@ ABSOLUTE RULES:
 ❌ Do NOT exaggerate experience or skills
 ❌ Do NOT claim expertise in areas not shown in resume
 ❌ Use ONLY information present in the resume
-✅ Write in professional, confident, human tone
+❌ Do NOT repeat resume bullets verbatim
+✅ Write in professional, confident, human tone (not verbose)
 ✅ Reference company name and role specifically
-✅ Keep to 3-4 short paragraphs
-✅ Make it ready to send
+✅ Explain WHY this role and WHY this company
+✅ Keep to 3-4 short, punchy paragraphs
+✅ End with a confident call to action
 
 STRUCTURE:
-1. Opening: Express interest in role at company
-2. Body: Connect 2-3 relevant experiences/skills from resume to job requirements
-3. Closing: Express enthusiasm and call to action
+1. Opening: Express specific interest in [ROLE] at [COMPANY]
+   - Mention what excites you about this opportunity
+   - Be genuine and specific (not generic)
 
-Keep it concise, authentic, and compelling.`;
+2. Body (2 paragraphs):
+   - Connect your most relevant experience to job requirements
+   - Show understanding of company's mission/product/industry
+   - Explain how your background makes you a strong fit
+   - Use concrete examples from resume (but don't copy bullets)
+
+3. Closing:
+   - Express enthusiasm for contributing to company goals
+   - Confident call to action (e.g., "I'd welcome the opportunity to discuss...")
+   - Professional sign-off
+
+TONE GUIDELINES:
+- Professional but human (not robotic)
+- Confident but not arrogant
+- Specific but concise
+- Avoid clichés like "I am writing to apply..."
+- Avoid overly formal language
+- Sound like a real person who genuinely wants this job
+
+Keep it authentic, compelling, and ready to send.`;
 
   const resumeText = JSON.stringify(resume, null, 2);
 

@@ -11,10 +11,11 @@ import type { Resume, JobDescription, Customization } from '../../../../drizzle/
 interface MatchAnalysisStepProps {
   resume: Resume;
   job: JobDescription;
+  photoData: { includePhoto: boolean; photoUrl?: string; photoKey?: string };
   onComplete: (customization: Customization) => void;
 }
 
-export default function MatchAnalysisStep({ resume, job, onComplete }: MatchAnalysisStepProps) {
+export default function MatchAnalysisStep({ resume, job, photoData, onComplete }: MatchAnalysisStepProps) {
   const [customization, setCustomization] = useState<Customization | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -38,6 +39,9 @@ export default function MatchAnalysisStep({ resume, job, onComplete }: MatchAnal
       createCustomizationMutation.mutate({
         resumeId: resume.id,
         jobId: job.id,
+        includePhoto: photoData.includePhoto,
+        photoUrl: photoData.photoUrl,
+        photoKey: photoData.photoKey,
       });
     }
   }, []);

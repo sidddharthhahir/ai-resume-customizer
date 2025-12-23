@@ -62,8 +62,11 @@ export const customizations = mysqlTable("customizations", {
   customizedResume: json("customizedResume").$type<CustomizedResume>().notNull(),
   coverLetter: text("coverLetter").notNull(),
   explanation: json("explanation").$type<Explanation>().notNull(),
-  resumePdfUrl: text("resumePdfUrl"), // Generated PDF URL
-  resumeDocxUrl: text("resumeDocxUrl"), // Generated DOCX URL
+  includePhoto: int("includePhoto").default(0).notNull(), // 0 = no, 1 = yes
+  photoUrl: text("photoUrl"), // S3 URL of profile photo
+  photoKey: text("photoKey"), // S3 key for photo
+  resumePdfUrl: text("resumePdfUrl"),
+  resumeDocxUrl: text("resumeDocxUrl"),
   coverLetterPdfUrl: text("coverLetterPdfUrl"),
   coverLetterDocxUrl: text("coverLetterDocxUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

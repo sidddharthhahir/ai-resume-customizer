@@ -37,3 +37,25 @@
 - [x] README with architecture overview
 - [x] Setup instructions
 - [x] AI safety rules documentation
+
+## Upgrade: Photo Support
+- [x] Database schema update for photo storage
+- [x] Photo upload endpoint with validation
+- [x] Photo validation (face visible, neutral background, size)
+- [x] Photo embedding in PDF resume
+- [x] Photo embedding in DOCX resume
+- [x] Photo opt-in UI in wizard
+- [x] Ensure cover letter never includes photo
+
+## Upgrade: Resume Quality Improvements
+- [x] Implement Action→Technology→Impact formula
+- [x] Upgrade resume customization prompts
+- [x] Improve bullet point clarity and impact
+- [x] Ensure all changes maintain truthfulness
+
+## Upgrade: Cover Letter Quality
+- [x] Improve cover letter generation prompts
+- [x] Add company-specific reasoning
+- [x] Add role-specific motivation
+- [x] Ensure human, confident tone
+- [x] Add strong call-to-action
