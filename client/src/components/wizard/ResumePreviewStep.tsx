@@ -1,7 +1,8 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Mail, Lightbulb } from 'lucide-react';
+import { FileText, Mail, Lightbulb, Eye } from 'lucide-react';
+import ResumePreview from '../ResumePreview';
 import type { Customization } from '../../../../drizzle/schema';
 
 interface ResumePreviewStepProps {
@@ -13,11 +14,15 @@ export default function ResumePreviewStep({ customization }: ResumePreviewStepPr
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="resume" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+      <Tabs defaultValue="preview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="preview" className="flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            Preview
+          </TabsTrigger>
           <TabsTrigger value="resume" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Customized Resume
+            Details
           </TabsTrigger>
           <TabsTrigger value="cover" className="flex items-center gap-2">
             <Mail className="w-4 h-4" />
@@ -28,6 +33,14 @@ export default function ResumePreviewStep({ customization }: ResumePreviewStepPr
             Explanation
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="preview" className="mt-4">
+          <ResumePreview
+            resume={customizedResume}
+            templateId={(customization.templateId as any) || 'classic'}
+            photoUrl={customization.photoUrl || undefined}
+          />
+        </TabsContent>
 
         <TabsContent value="resume" className="space-y-4 mt-4">
           {/* Summary */}

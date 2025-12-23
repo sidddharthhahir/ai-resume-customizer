@@ -57,6 +57,7 @@ export async function generateResumePDF(
     const pageWidth = doc.page.width;
     const pageMargin = 50;
     const photoSize = 100;
+    const photoGap = 15; // Gap between photo and text
     
     if (photoBuffer) {
       // Add photo in top-right corner
@@ -70,18 +71,30 @@ export async function generateResumePDF(
     }
     
     // Title (left-aligned to avoid photo)
-    const titleWidth = photoBuffer ? pageWidth - 2 * pageMargin - photoSize - 20 : pageWidth - 2 * pageMargin;
+    const titleWidth = photoBuffer ? pageWidth - 2 * pageMargin - photoSize - photoGap : pageWidth - 2 * pageMargin;
     doc.fontSize(20).font('Helvetica-Bold').text('RESUME', pageMargin, pageMargin, { 
       width: titleWidth,
       align: 'left' 
     });
-    doc.moveDown();
+    
+    // Add extra space if photo is present to prevent overlap
+    if (photoBuffer) {
+      doc.moveDown(2.5); // Extra space for photo height
+    } else {
+      doc.moveDown();
+    }
 
     // Summary
     const summaryHeading = formatHeading('PROFESSIONAL SUMMARY', template);
     doc.fontSize(14).font('Helvetica-Bold').text(summaryHeading);
     doc.moveDown(0.5 * getSpacingMultiplier(template));
-    doc.fontSize(11).font('Helvetica').text(customizedResume.summary.revised);
+    
+    // Calculate text width to avoid photo overlap
+    const textWidth = photoBuffer ? pageWidth - 2 * pageMargin - photoSize - photoGap : pageWidth - 2 * pageMargin;
+    doc.fontSize(11).font('Helvetica').text(customizedResume.summary.revised, pageMargin, doc.y, {
+      width: textWidth,
+      align: 'left'
+    });
     doc.moveDown();
 
     // Skills

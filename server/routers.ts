@@ -1,7 +1,10 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
+import { getDb } from "./db";
+import { customizations } from "../drizzle/schema";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { 
   createResume, 
@@ -272,6 +275,19 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         return getCustomizationById(input.id);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const customization = await getCustomizationById(input.id);
+        if (!customization || customization.userId !== ctx.user.id) {
+          throw new Error('Customization not found or unauthorized');
+        }
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+        await db.delete(customizations).where(eq(customizations.id, input.id as any));
+        return { success: true };
       }),
 
     // Get customization by resume and job

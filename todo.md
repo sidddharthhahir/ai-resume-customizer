@@ -69,3 +69,22 @@
 - [x] Update DOCX generator for template support
 - [x] Integrate template selection into wizard
 - [x] Ensure all templates are ATS-safe
+
+## Bug Fixes
+- [x] Fix photo overlap with summary text in PDF generation
+- [x] Improve photo positioning and margin handling
+- [x] Ensure text wrapping around photo area
+
+## Feature: Live Preview Pane
+- [x] Create resume preview component
+- [x] Show real-time preview with selected template
+- [x] Display before final download
+- [x] Support all template styles
+
+## Feature: User Dashboard
+- [x] Create dashboard page with customization history
+- [x] Show list of all customizations with dates
+- [x] Display company and role for each customization
+- [x] Add download links for previous customizations
+- [x] Show match scores and template used
+- [x] Add delete functionality for old customizations
