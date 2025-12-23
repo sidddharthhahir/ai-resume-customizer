@@ -159,6 +159,7 @@ export const appRouter = router({
       .input(z.object({
         resumeId: z.number(),
         jobId: z.number(),
+        templateId: z.string().optional(),
         includePhoto: z.boolean().optional(),
         photoUrl: z.string().optional(),
         photoKey: z.string().optional(),
@@ -199,6 +200,7 @@ export const appRouter = router({
           userId: ctx.user.id,
           resumeId: input.resumeId,
           jobId: input.jobId,
+          templateId: input.templateId || 'classic',
           matchScore,
           customizedResume: customized,
           coverLetter,

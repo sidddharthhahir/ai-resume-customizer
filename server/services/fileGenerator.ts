@@ -3,6 +3,7 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Imag
 import { CustomizedResume } from '../../drizzle/schema';
 import { storagePut } from '../storage';
 import axios from 'axios';
+import { getTemplate, formatHeading, formatBullet, getSpacingMultiplier, type TemplateType } from '../../shared/templates';
 
 /**
  * Generate sanitized filename for downloads
@@ -18,8 +19,10 @@ export async function generateResumePDF(
   customizedResume: CustomizedResume,
   companyName: string,
   roleName: string,
-  photoUrl?: string
+  photoUrl?: string,
+  templateId: TemplateType = 'classic'
 ): Promise<{ url: string; key: string }> {
+  const template = getTemplate(templateId);
   // Fetch photo before creating PDF (if provided)
   let photoBuffer: Buffer | undefined;
   if (photoUrl) {
@@ -75,23 +78,26 @@ export async function generateResumePDF(
     doc.moveDown();
 
     // Summary
-    doc.fontSize(14).font('Helvetica-Bold').text('PROFESSIONAL SUMMARY');
-    doc.moveDown(0.5);
+    const summaryHeading = formatHeading('PROFESSIONAL SUMMARY', template);
+    doc.fontSize(14).font('Helvetica-Bold').text(summaryHeading);
+    doc.moveDown(0.5 * getSpacingMultiplier(template));
     doc.fontSize(11).font('Helvetica').text(customizedResume.summary.revised);
     doc.moveDown();
 
     // Skills
     if (customizedResume.skills.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('SKILLS');
-      doc.moveDown(0.5);
+      const skillsHeading = formatHeading('SKILLS', template);
+      doc.fontSize(14).font('Helvetica-Bold').text(skillsHeading);
+      doc.moveDown(0.5 * getSpacingMultiplier(template));
       doc.fontSize(11).font('Helvetica').text(customizedResume.skills.join(' • '));
       doc.moveDown();
     }
 
     // Experience
     if (customizedResume.experience.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('EXPERIENCE');
-      doc.moveDown(0.5);
+      const expHeading = formatHeading('EXPERIENCE', template);
+      doc.fontSize(14).font('Helvetica-Bold').text(expHeading);
+      doc.moveDown(0.5 * getSpacingMultiplier(template));
 
       customizedResume.experience.forEach((exp) => {
         doc.fontSize(12).font('Helvetica-Bold').text(exp.role);
@@ -122,8 +128,9 @@ export async function generateResumePDF(
 
     // Education
     if (customizedResume.education.length > 0) {
-      doc.fontSize(14).font('Helvetica-Bold').text('EDUCATION');
-      doc.moveDown(0.5);
+      const eduHeading = formatHeading('EDUCATION', template);
+      doc.fontSize(14).font('Helvetica-Bold').text(eduHeading);
+      doc.moveDown(0.5 * getSpacingMultiplier(template));
 
       customizedResume.education.forEach((edu) => {
         doc.fontSize(12).font('Helvetica-Bold').text(edu.degree);
@@ -145,8 +152,10 @@ export async function generateResumeDOCX(
   customizedResume: CustomizedResume,
   companyName: string,
   roleName: string,
-  photoUrl?: string
+  photoUrl?: string,
+  templateId: TemplateType = 'classic'
 ): Promise<{ url: string; key: string }> {
+  const template = getTemplate(templateId);
   // Fetch photo before creating DOCX (if provided)
   let photoBuffer: Buffer | undefined;
   if (photoUrl) {
@@ -192,9 +201,9 @@ export async function generateResumeDOCX(
   // Summary
   sections.push(
     new Paragraph({
-      text: 'PROFESSIONAL SUMMARY',
+      text: formatHeading('PROFESSIONAL SUMMARY', template),
       heading: HeadingLevel.HEADING_1,
-      spacing: { before: 200, after: 100 },
+      spacing: { before: 200 * getSpacingMultiplier(template), after: 100 * getSpacingMultiplier(template) },
     })
   );
   sections.push(
@@ -208,9 +217,9 @@ export async function generateResumeDOCX(
   if (customizedResume.skills.length > 0) {
     sections.push(
       new Paragraph({
-        text: 'SKILLS',
+        text: formatHeading('SKILLS', template),
         heading: HeadingLevel.HEADING_1,
-        spacing: { before: 200, after: 100 },
+        spacing: { before: 200 * getSpacingMultiplier(template), after: 100 * getSpacingMultiplier(template) },
       })
     );
     sections.push(
@@ -225,9 +234,9 @@ export async function generateResumeDOCX(
   if (customizedResume.experience.length > 0) {
     sections.push(
       new Paragraph({
-        text: 'EXPERIENCE',
+        text: formatHeading('EXPERIENCE', template),
         heading: HeadingLevel.HEADING_1,
-        spacing: { before: 200, after: 100 },
+        spacing: { before: 200 * getSpacingMultiplier(template), after: 100 * getSpacingMultiplier(template) },
       })
     );
 
@@ -304,9 +313,9 @@ export async function generateResumeDOCX(
   if (customizedResume.education.length > 0) {
     sections.push(
       new Paragraph({
-        text: 'EDUCATION',
+        text: formatHeading('EDUCATION', template),
         heading: HeadingLevel.HEADING_1,
-        spacing: { before: 200, after: 100 },
+        spacing: { before: 200 * getSpacingMultiplier(template), after: 100 * getSpacingMultiplier(template) },
       })
     );
 

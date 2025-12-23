@@ -59,3 +59,13 @@
 - [x] Add role-specific motivation
 - [x] Ensure human, confident tone
 - [x] Add strong call-to-action
+
+## Feature: Resume Templates
+- [x] Design template system (Modern, Classic, Technical, Creative, Minimal)
+- [x] Create template definitions with styling rules
+- [x] Update database schema for template selection
+- [x] Create template selection UI component
+- [x] Update PDF generator for template support
+- [x] Update DOCX generator for template support
+- [x] Integrate template selection into wizard
+- [x] Ensure all templates are ATS-safe

@@ -58,6 +58,7 @@ export const customizations = mysqlTable("customizations", {
   userId: int("userId").notNull(),
   resumeId: int("resumeId").notNull(),
   jobId: int("jobId").notNull(),
+  templateId: varchar("templateId", { length: 50 }).default('classic').notNull(),
   matchScore: json("matchScore").$type<MatchScore>().notNull(),
   customizedResume: json("customizedResume").$type<CustomizedResume>().notNull(),
   coverLetter: text("coverLetter").notNull(),

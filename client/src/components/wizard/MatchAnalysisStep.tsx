@@ -12,10 +12,11 @@ interface MatchAnalysisStepProps {
   resume: Resume;
   job: JobDescription;
   photoData: { includePhoto: boolean; photoUrl?: string; photoKey?: string };
+  templateId: string;
   onComplete: (customization: Customization) => void;
 }
 
-export default function MatchAnalysisStep({ resume, job, photoData, onComplete }: MatchAnalysisStepProps) {
+export default function MatchAnalysisStep({ resume, job, photoData, templateId, onComplete }: MatchAnalysisStepProps) {
   const [customization, setCustomization] = useState<Customization | null>(null);
   const [generating, setGenerating] = useState(false);
 
@@ -39,6 +40,7 @@ export default function MatchAnalysisStep({ resume, job, photoData, onComplete }
       createCustomizationMutation.mutate({
         resumeId: resume.id,
         jobId: job.id,
+        templateId,
         includePhoto: photoData.includePhoto,
         photoUrl: photoData.photoUrl,
         photoKey: photoData.photoKey,

@@ -1,0 +1,1 @@
+ALTER TABLE `customizations` ADD `templateId` varchar(50) DEFAULT 'classic' NOT NULL;
