@@ -88,3 +88,13 @@
 - [x] Add download links for previous customizations
 - [x] Show match scores and template used
 - [x] Add delete functionality for old customizations
+
+## Mobile Optimization
+- [x] Fix wizard step navigation layout on mobile
+- [x] Make step tabs scrollable and responsive
+- [x] Optimize file upload area for touch devices
+- [x] Improve resume preview for small screens
+- [x] Make dashboard responsive
+- [x] Test on various mobile screen sizes
+- [x] Optimize button sizes for touch
+- [x] Fix text overflow and spacing issues

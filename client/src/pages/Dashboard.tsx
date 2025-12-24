@@ -47,8 +47,8 @@ export default function Dashboard() {
 
   if (customizationsQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
-        <div className="container max-w-6xl">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-4 md:py-8">
+        <div className="container max-w-6xl px-4 md:px-6">
           <div className="text-center py-12">
             <p className="text-gray-600">Loading your customizations...</p>
           </div>
@@ -60,20 +60,20 @@ export default function Dashboard() {
   const customizations = customizationsQuery.data || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
-      <div className="container max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-4 md:py-8">
+      <div className="container max-w-6xl px-4 md:px-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Customizations</h1>
-          <p className="text-gray-600">View and manage all your resume customizations and cover letters</p>
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">My Customizations</h1>
+          <p className="text-sm md:text-base text-gray-600">View and manage all your resume customizations and cover letters</p>
         </div>
 
         {/* Empty State */}
         {customizations.length === 0 ? (
-          <Card className="text-center py-12">
-            <FileText className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No customizations yet</h3>
-            <p className="text-gray-600 mb-6">
+          <Card className="text-center py-8 md:py-12 px-4 md:px-6">
+            <FileText className="w-12 md:w-16 h-12 md:h-16 mx-auto text-gray-300 mb-3 md:mb-4" />
+            <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-2">No customizations yet</h3>
+            <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
               Start by uploading your resume and selecting a job description to create your first customization.
             </p>
             <Button asChild>
@@ -81,43 +81,43 @@ export default function Dashboard() {
             </Button>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3 md:gap-4">
             {customizations.map((customization) => (
               <Card key={customization.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">
+                <CardHeader className="pb-2 md:pb-3">
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 md:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-lg md:text-xl truncate">
                         {customization.jobId ? `Resume for Job ${customization.jobId}` : 'Customization'}
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Calendar className="w-4 h-4" />
-                        {formatDate(customization.createdAt)}
+                      <CardDescription className="flex items-center gap-2 mt-1 text-xs md:text-sm">
+                        <Calendar className="w-3 md:w-4 h-3 md:h-4 flex-shrink-0" />
+                        <span className="truncate">{formatDate(customization.createdAt)}</span>
                       </CardDescription>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Badge
                         variant="outline"
-                        className={`${getMatchScoreColor(
+                        className={`text-xs md:text-sm ${getMatchScoreColor(
                           (customization.matchScore as any)?.overallScore || 0
                         )}`}
                       >
-                        <Target className="w-3 h-3 mr-1" />
-                        {Math.round((customization.matchScore as any)?.overallScore || 0)}% Match
+                        <Target className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                        {Math.round((customization.matchScore as any)?.overallScore || 0)}%
                       </Badge>
-                      <Badge variant="secondary">
-                        <Zap className="w-3 h-3 mr-1" />
+                      <Badge variant="secondary" className="text-xs md:text-sm">
+                        <Zap className="w-2 md:w-3 h-2 md:h-3 mr-1" />
                         {customization.templateId || 'classic'}
                       </Badge>
                     </div>
                   </div>
                 </CardHeader>
 
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <CardContent className="px-3 md:px-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-3 md:mb-4">
                     {/* Match Score Details */}
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Skill Overlap</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-700">Skill Overlap</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                           <div
@@ -127,14 +127,14 @@ export default function Dashboard() {
                             }}
                           />
                         </div>
-                        <span className="text-sm font-semibold">
+                        <span className="text-xs md:text-sm font-semibold">
                           {Math.round((customization.matchScore as any)?.skillOverlap || 0)}%
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Experience Relevance</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-700">Experience Relevance</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                           <div
@@ -144,14 +144,14 @@ export default function Dashboard() {
                             }}
                           />
                         </div>
-                        <span className="text-sm font-semibold">
+                        <span className="text-xs md:text-sm font-semibold">
                           {Math.round((customization.matchScore as any)?.experienceRelevance || 0)}%
                         </span>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <p className="text-sm font-medium text-gray-700">Keyword Alignment</p>
+                      <p className="text-xs md:text-sm font-medium text-gray-700">Keyword Alignment</p>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 bg-gray-200 rounded-full h-2">
                           <div
@@ -161,7 +161,7 @@ export default function Dashboard() {
                             }}
                           />
                         </div>
-                        <span className="text-sm font-semibold">
+                        <span className="text-xs md:text-sm font-semibold">
                           {Math.round((customization.matchScore as any)?.keywordAlignment || 0)}%
                         </span>
                       </div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex gap-2 pt-4 border-t">
+                  <div className="flex flex-wrap gap-2 pt-3 md:pt-4 border-t">
                     <Button
                       variant="outline"
                       size="sm"
@@ -177,25 +177,26 @@ export default function Dashboard() {
                         setSelectedCustomization(customization);
                         setShowDetails(true);
                       }}
+                      className="text-xs md:text-sm px-2 md:px-3 py-1 md:py-2 h-8 md:h-9"
                     >
-                      <FileText className="w-4 h-4 mr-2" />
-                      View Details
+                      <FileText className="w-3 md:w-4 h-3 md:h-4 mr-1" />
+                      <span className="hidden sm:inline">View</span>
                     </Button>
 
                     {customization.resumePdfUrl && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="text-xs md:text-sm px-2 md:px-3 py-1 md:py-2 h-8 md:h-9">
                         <a href={customization.resumePdfUrl} download>
-                          <Download className="w-4 h-4 mr-2" />
-                          Resume PDF
+                          <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
+                          <span className="hidden sm:inline">PDF</span>
                         </a>
                       </Button>
                     )}
 
                     {customization.coverLetterPdfUrl && (
-                      <Button variant="outline" size="sm" asChild>
+                      <Button variant="outline" size="sm" asChild className="text-xs md:text-sm px-2 md:px-3 py-1 md:py-2 h-8 md:h-9">
                         <a href={customization.coverLetterPdfUrl} download>
-                          <Download className="w-4 h-4 mr-2" />
-                          Cover Letter
+                          <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
+                          <span className="hidden sm:inline">Letter</span>
                         </a>
                       </Button>
                     )}
@@ -203,11 +204,11 @@ export default function Dashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 ml-auto text-xs md:text-sm px-2 md:px-3 py-1 md:py-2 h-8 md:h-9"
                       onClick={() => handleDelete(customization.id)}
                       disabled={deleteCustomizationMutation.isPending}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 md:w-4 h-3 md:h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -219,7 +220,7 @@ export default function Dashboard() {
 
       {/* Details Dialog */}
       <Dialog open={showDetails} onOpenChange={setShowDetails}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto px-4 md:px-6">
           <DialogHeader>
             <DialogTitle>Customization Details</DialogTitle>
             <DialogDescription>Review the details of this customization</DialogDescription>
@@ -228,9 +229,9 @@ export default function Dashboard() {
           {selectedCustomization && (
             <div className="space-y-4">
               {/* Match Score */}
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-900 mb-2">Match Score Breakdown</h4>
-                <div className="space-y-2 text-sm">
+              <div className="bg-blue-50 p-3 md:p-4 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2 text-sm md:text-base">Match Score Breakdown</h4>
+                <div className="space-y-2 text-xs md:text-sm">
                   <div className="flex justify-between">
                     <span>Overall Match:</span>
                     <span className="font-semibold">
@@ -258,59 +259,38 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Explanation */}
-              {selectedCustomization.explanation && (
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-semibold text-green-900 mb-2">Why These Changes?</h4>
-                  <div className="space-y-2 text-sm text-green-800">
-                    {(selectedCustomization.explanation as any)?.skillEmphasis && (
-                      <div>
-                        <p className="font-medium">Skills Emphasized:</p>
-                        <ul className="list-disc list-inside">
-                          {(selectedCustomization.explanation as any).skillEmphasis.map(
-                            (skill: string, idx: number) => (
-                              <li key={idx}>{skill}</li>
-                            )
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Download Options */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-3">Download Files</h4>
+              <div className="bg-gray-50 p-3 md:p-4 rounded-lg">
+                <h4 className="font-semibold text-gray-900 mb-3 text-sm md:text-base">Download Files</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {selectedCustomization.resumePdfUrl && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="text-xs md:text-sm">
                       <a href={selectedCustomization.resumePdfUrl} download>
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
                         Resume PDF
                       </a>
                     </Button>
                   )}
                   {selectedCustomization.resumeDocxUrl && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="text-xs md:text-sm">
                       <a href={selectedCustomization.resumeDocxUrl} download>
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
                         Resume DOCX
                       </a>
                     </Button>
                   )}
                   {selectedCustomization.coverLetterPdfUrl && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="text-xs md:text-sm">
                       <a href={selectedCustomization.coverLetterPdfUrl} download>
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
                         Letter PDF
                       </a>
                     </Button>
                   )}
                   {selectedCustomization.coverLetterDocxUrl && (
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild className="text-xs md:text-sm">
                       <a href={selectedCustomization.coverLetterDocxUrl} download>
-                        <Download className="w-4 h-4 mr-2" />
+                        <Download className="w-3 md:w-4 h-3 md:h-4 mr-1" />
                         Letter DOCX
                       </a>
                     </Button>

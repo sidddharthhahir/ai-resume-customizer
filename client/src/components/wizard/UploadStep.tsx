@@ -83,13 +83,13 @@ export default function UploadStep({ onComplete }: UploadStepProps) {
           className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors cursor-pointer"
           onClick={() => fileInputRef.current?.click()}
         >
-          <div className="p-12 text-center">
-            <Upload className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Upload Your Resume</h3>
-            <p className="text-gray-600 mb-4">
+          <div className="p-6 md:p-12 text-center">
+            <Upload className="w-12 md:w-16 h-12 md:h-16 mx-auto text-gray-400 mb-3 md:mb-4" />
+            <h3 className="text-base md:text-lg font-semibold mb-2">Upload Your Resume</h3>
+            <p className="text-sm md:text-base text-gray-600 mb-3 md:mb-4">
               Click to browse or drag and drop your resume here
             </p>
-            <p className="text-sm text-gray-500">Supports PDF and DOCX (max 10MB)</p>
+            <p className="text-xs md:text-sm text-gray-500">Supports PDF and DOCX (max 10MB)</p>
             <input
               ref={fileInputRef}
               type="file"
@@ -101,7 +101,7 @@ export default function UploadStep({ onComplete }: UploadStepProps) {
         </Card>
       ) : (
         <Card className="border-green-200 bg-green-50">
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             <div className="flex items-start gap-4">
               <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
               <div className="flex-1">

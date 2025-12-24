@@ -55,24 +55,24 @@ export default function ResumeWizard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8">
-      <div className="container max-w-5xl">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-4 md:py-8">
+      <div className="container max-w-5xl px-4 md:px-6">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Resume Customizer</h1>
-          <p className="text-lg text-gray-600">
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1 md:mb-2">AI Resume Customizer</h1>
+          <p className="text-sm md:text-lg text-gray-600">
             Optimize your resume for any job with AI-powered customization
           </p>
         </div>
 
         {/* Progress Bar */}
-        <div className="mb-8">
-          <Progress value={progress} className="h-2 mb-4" />
-          <div className="flex justify-between">
+        <div className="mb-6 md:mb-8">
+          <Progress value={progress} className="h-2 mb-3 md:mb-4" />
+          <div className="flex justify-between gap-1 md:gap-2 overflow-x-auto pb-2">
             {STEPS.map((step) => (
               <div
                 key={step.id}
-                className={`flex-1 text-center ${
+                className={`flex-shrink-0 text-center ${
                   step.id === currentStep
                     ? 'text-blue-600 font-semibold'
                     : step.id < currentStep
@@ -80,7 +80,7 @@ export default function ResumeWizard() {
                     : 'text-gray-400'
                 }`}
               >
-                <div className="text-sm">{step.title}</div>
+                <div className="text-xs md:text-sm whitespace-nowrap">{step.title}</div>
               </div>
             ))}
           </div>
@@ -88,11 +88,11 @@ export default function ResumeWizard() {
 
         {/* Step Content */}
         <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle>{STEPS[currentStep - 1]?.title}</CardTitle>
-            <CardDescription>{STEPS[currentStep - 1]?.description}</CardDescription>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-xl md:text-2xl">{STEPS[currentStep - 1]?.title}</CardTitle>
+            <CardDescription className="text-xs md:text-sm">{STEPS[currentStep - 1]?.description}</CardDescription>
           </CardHeader>
-          <CardContent className="min-h-[400px]">
+          <CardContent className="min-h-[300px] md:min-h-[400px] px-3 md:px-6">
             {currentStep === 1 && <UploadStep onComplete={setResume} />}
             {currentStep === 2 && <JobDescriptionStep onComplete={setJob} />}
             {currentStep === 3 && (
@@ -120,23 +120,26 @@ export default function ResumeWizard() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between gap-2 md:gap-4 mt-4 md:mt-6 px-4 md:px-0">
           <Button
             variant="outline"
             onClick={handleBack}
             disabled={currentStep === 1}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-2 md:py-2 h-9 md:h-10"
           >
-            <ChevronLeft className="w-4 h-4" />
-            Back
+            <ChevronLeft className="w-3 md:w-4 h-3 md:h-4" />
+            <span className="hidden sm:inline">Back</span>
           </Button>
+          <div className="flex-1 flex items-center justify-center text-xs md:text-sm text-gray-600">
+            Step {currentStep} of {STEPS.length}
+          </div>
           <Button
             onClick={handleNext}
             disabled={!canGoNext() || currentStep === STEPS.length}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-4 py-2 md:py-2 h-9 md:h-10"
           >
-            Next
-            <ChevronRight className="w-4 h-4" />
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-3 md:w-4 h-3 md:h-4" />
           </Button>
         </div>
       </div>
