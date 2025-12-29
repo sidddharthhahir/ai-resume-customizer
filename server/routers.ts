@@ -29,6 +29,7 @@ import {
   generateCoverLetterPDF, 
   generateCoverLetterDOCX 
 } from "./services/fileGenerator";
+import { analyzeATSCompatibility } from "./services/atsScanner";
 import { storagePut } from "./storage";
 
 export const appRouter = router({
@@ -298,6 +299,42 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         return getCustomizationByResumeAndJob(input.resumeId, input.jobId);
+      }),
+
+    // Analyze ATS compatibility
+    analyzeATS: protectedProcedure
+      .input(z.object({
+        customizationId: z.number(),
+      }))
+      .query(async ({ input }) => {
+        const customization = await getCustomizationById(input.customizationId);
+        if (!customization) {
+          throw new Error('Customization not found');
+        }
+
+        const job = await getJobDescriptionById(customization.jobId);
+        if (!job) {
+          throw new Error('Job description not found');
+        }
+
+        // Analyze ATS compatibility
+        const resumeData = {
+          summary: customization.customizedResume.summary?.revised || customization.customizedResume.summary?.original,
+          skills: customization.customizedResume.skills,
+          experience: customization.customizedResume.experience.map((exp: any) => ({
+            title: exp.role,
+            company: exp.company,
+            description: exp.duration || '',
+            bullets: exp.bullets.map((b: any) => typeof b === 'string' ? b : (b.revised || b.original)),
+          })),
+          education: customization.customizedResume.education.map((edu: any) => ({ school: edu.institution || '', degree: edu.degree || '', field: edu.field || '' })),
+        };
+        const atsAnalysis = await analyzeATSCompatibility(
+          resumeData,
+          job.description
+        );
+
+        return atsAnalysis;
       }),
   }),
 });

@@ -1,8 +1,11 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Mail, Lightbulb, Eye } from 'lucide-react';
+import { FileText, Mail, Lightbulb, Eye, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import ResumePreview from '../ResumePreview';
+import ATSScanner from '../ATSScanner';
+import { trpc } from '@/lib/trpc';
 import type { Customization } from '../../../../drizzle/schema';
 
 interface ResumePreviewStepProps {
@@ -15,22 +18,26 @@ export default function ResumePreviewStep({ customization }: ResumePreviewStepPr
   return (
     <div className="space-y-6">
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="preview" className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            Preview
+            <span className="hidden sm:inline">Preview</span>
           </TabsTrigger>
           <TabsTrigger value="resume" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Details
+            <span className="hidden sm:inline">Details</span>
           </TabsTrigger>
           <TabsTrigger value="cover" className="flex items-center gap-2">
             <Mail className="w-4 h-4" />
-            Cover Letter
+            <span className="hidden sm:inline">Cover</span>
+          </TabsTrigger>
+          <TabsTrigger value="ats" className="flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            <span className="hidden sm:inline">ATS</span>
           </TabsTrigger>
           <TabsTrigger value="explanation" className="flex items-center gap-2">
             <Lightbulb className="w-4 h-4" />
-            Explanation
+            <span className="hidden sm:inline">Why</span>
           </TabsTrigger>
         </TabsList>
 
@@ -107,7 +114,11 @@ export default function ResumePreviewStep({ customization }: ResumePreviewStepPr
           </Card>
         </TabsContent>
 
-        <TabsContent value="explanation" className="mt-4 space-y-4">
+        <TabsContent value="ats" className="mt-4">
+          <ATSScanner customizationId={customization.id} />
+        </TabsContent>
+
+        <TabsContent value="explanation" className="space-y-4 mt-4">
           <Card className="p-6">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-yellow-600" />

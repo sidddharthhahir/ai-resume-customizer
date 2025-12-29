@@ -98,3 +98,14 @@
 - [x] Test on various mobile screen sizes
 - [x] Optimize button sizes for touch
 - [x] Fix text overflow and spacing issues
+
+## Feature: ATS Compatibility Scanner
+- [x] Create ATS analysis service with keyword extraction
+- [x] Implement ATS score calculation algorithm
+- [x] Add formatting risk detection
+- [x] Create safe optimization suggestion engine
+- [x] Add ATS scanner endpoint to backend
+- [x] Create ATS panel UI component
+- [x] Integrate ATS scanner into preview step
+- [x] Add warning indicators for low scores
+- [x] Test ATS analysis accuracy
