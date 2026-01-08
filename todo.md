@@ -109,3 +109,13 @@
 - [x] Integrate ATS scanner into preview step
 - [x] Add warning indicators for low scores
 - [x] Test ATS analysis accuracy
+
+## Feature: Batch Optimization
+- [x] Create batch processing service for multiple job descriptions
+- [x] Add batch customization endpoint to backend
+- [x] Create batch upload UI component
+- [x] Build batch comparison view with side-by-side ATS scores
+- [x] Implement batch result download (all files as ZIP)
+- [x] Add batch processing progress tracking
+- [x] Create batch history and management
+- [x] Test batch optimization workflow

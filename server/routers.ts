@@ -301,6 +301,43 @@ export const appRouter = router({
         return getCustomizationByResumeAndJob(input.resumeId, input.jobId);
       }),
 
+    // Batch optimize multiple jobs
+    batchOptimize: protectedProcedure
+      .input(z.object({
+        resumeId: z.number(),
+        jobs: z.array(z.object({
+          id: z.string(),
+          companyName: z.string(),
+          roleName: z.string(),
+          description: z.string(),
+        })),
+        templateId: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const resume = await getResumeById(input.resumeId);
+        if (!resume || resume.userId !== ctx.user.id) {
+          throw new Error('Resume not found or unauthorized');
+        }
+
+        const parsedResume = typeof resume.parsedContent === 'string' ? JSON.parse(resume.parsedContent) : resume.parsedContent;
+        const { processBatchOptimization, generateBatchComparison, extractCommonKeywords } = await import('./services/batchProcessor');
+        
+        const results = await processBatchOptimization(
+          parsedResume,
+          input.jobs,
+          input.templateId || 'classic'
+        );
+
+        const comparison = generateBatchComparison(results);
+        const commonKeywords = extractCommonKeywords(results);
+
+        return {
+          results,
+          comparison,
+          commonKeywords,
+        };
+      }),
+
     // Analyze ATS compatibility
     analyzeATS: protectedProcedure
       .input(z.object({

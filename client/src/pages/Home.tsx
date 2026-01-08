@@ -2,11 +2,13 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import ResumeWizard from "@/components/ResumeWizard";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Zap } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useLocation } from "wouter";
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
+  const [, navigate] = useLocation();
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
       window.location.reload();
@@ -64,8 +66,17 @@ export default function Home() {
 
   return (
     <div className="relative">
-      {/* Logout button */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Header buttons */}
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/batch')}
+          className="flex items-center gap-2"
+        >
+          <Zap className="w-4 h-4" />
+          Batch Optimize
+        </Button>
         <Button
           variant="outline"
           size="sm"
