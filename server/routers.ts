@@ -17,7 +17,12 @@ import {
   getCustomizationById,
   getUserCustomizations,
   getCustomizationByResumeAndJob,
-  updateCustomizationFiles
+  updateCustomizationFiles,
+  createApplication,
+  getUserApplications,
+  updateApplicationStatus,
+  deleteApplication,
+  getApplicationStats
 } from "./db";
 import { extractResumeText, parseResumeWithAI } from "./services/resumeParser";
 import { analyzeJobDescription } from "./services/jobAnalyzer";
@@ -373,6 +378,76 @@ export const appRouter = router({
 
         return atsAnalysis;
       }),
+  }),
+
+  application: router({
+    create: protectedProcedure
+      .input(z.object({
+        customizationId: z.number(),
+        companyName: z.string(),
+        roleName: z.string(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const customization = await getCustomizationById(input.customizationId);
+        if (!customization || customization.userId !== ctx.user.id) {
+          throw new Error('Customization not found or unauthorized');
+        }
+
+        return createApplication({
+          userId: ctx.user.id,
+          customizationId: input.customizationId,
+          companyName: input.companyName,
+          roleName: input.roleName,
+          notes: input.notes || null,
+          status: 'applied',
+          matchScore: typeof customization.matchScore === 'object' ? (customization.matchScore as any).overallMatch : 0,
+          atsScore: 0,
+        } as any);
+      }),
+
+    list: protectedProcedure.query(async ({ ctx }) => {
+      return getUserApplications(ctx.user.id);
+    }),
+
+    updateStatus: protectedProcedure
+      .input(z.object({
+        applicationId: z.number(),
+        status: z.enum(['applied', 'interview', 'offer', 'rejected', 'withdrawn']),
+        notes: z.string().optional(),
+        outcome: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const app = await db.select().from(customizations).where(eq(customizations.id, input.applicationId)).limit(1);
+        if (!app || app[0].userId !== ctx.user.id) {
+          throw new Error('Application not found or unauthorized');
+        }
+
+        await updateApplicationStatus(input.applicationId, input.status, input.notes, input.outcome);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ applicationId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const db = await getDb();
+        if (!db) throw new Error('Database not available');
+
+        const app = await db.select().from(customizations).where(eq(customizations.id, input.applicationId)).limit(1);
+        if (!app || app[0].userId !== ctx.user.id) {
+          throw new Error('Application not found or unauthorized');
+        }
+
+        await deleteApplication(input.applicationId);
+        return { success: true };
+      }),
+
+    stats: protectedProcedure.query(async ({ ctx }) => {
+      return getApplicationStats(ctx.user.id);
+    }),
   }),
 });
 

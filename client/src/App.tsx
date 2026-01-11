@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
 import Batch from "./pages/Batch";
+import Tracker from "./pages/Tracker";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/batch"} component={Batch} />
+      <Route path={"/tracker"} component={Tracker} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

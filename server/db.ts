@@ -6,12 +6,15 @@ import {
   resumes, 
   jobDescriptions, 
   customizations,
+  applications,
   InsertResume,
   InsertJobDescription,
   InsertCustomization,
+  InsertApplication,
   Resume,
   JobDescription,
-  Customization
+  Customization,
+  Application
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -217,4 +220,73 @@ export async function updateCustomizationFiles(
   if (!db) throw new Error("Database not available");
 
   await db.update(customizations).set(files).where(eq(customizations.id, id));
+}
+
+
+// Application tracking functions
+export async function createApplication(app: InsertApplication): Promise<Application> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(applications).values(app);
+  const id = result[0].insertId as number;
+  const created = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
+  return created[0] as Application;
+}
+
+export async function getApplicationById(id: number): Promise<Application | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getUserApplications(userId: number): Promise<Application[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select().from(applications).where(eq(applications.userId, userId)).orderBy(desc(applications.appliedDate));
+}
+
+export async function updateApplicationStatus(
+  id: number,
+  status: string,
+  notes?: string,
+  outcome?: string
+): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const updateData: any = { status, lastUpdated: new Date() };
+  if (notes !== undefined) updateData.notes = notes;
+  if (outcome !== undefined) updateData.outcome = outcome;
+
+  await db.update(applications).set(updateData).where(eq(applications.id, id));
+}
+
+export async function deleteApplication(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.delete(applications).where(eq(applications.id, id));
+}
+
+export async function getApplicationStats(userId: number): Promise<any> {
+  const db = await getDb();
+  if (!db) return { total: 0, applied: 0, interview: 0, offer: 0, rejected: 0, withdrawn: 0, successRate: 0 };
+
+  const apps = await db.select().from(applications).where(eq(applications.userId, userId));
+  
+  const stats = {
+    total: apps.length,
+    applied: apps.filter((a: any) => a.status === 'applied').length,
+    interview: apps.filter((a: any) => a.status === 'interview').length,
+    offer: apps.filter((a: any) => a.status === 'offer').length,
+    rejected: apps.filter((a: any) => a.status === 'rejected').length,
+    withdrawn: apps.filter((a: any) => a.status === 'withdrawn').length,
+    successRate: apps.length > 0 ? Math.round((apps.filter((a: any) => a.status === 'offer').length / apps.length) * 100) : 0,
+  };
+
+  return stats;
 }

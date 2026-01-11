@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { getLoginUrl } from "@/const";
 import ResumeWizard from "@/components/ResumeWizard";
-import { Loader2, LogOut, Zap } from "lucide-react";
+import { Loader2, LogOut, Zap, BarChart3 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useLocation } from "wouter";
 
@@ -67,7 +67,16 @@ export default function Home() {
   return (
     <div className="relative">
       {/* Header buttons */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
+      <div className="absolute top-4 right-4 z-10 flex gap-2 flex-wrap justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate('/tracker')}
+          className="flex items-center gap-2"
+        >
+          <BarChart3 className="w-4 h-4" />
+          Tracker
+        </Button>
         <Button
           variant="outline"
           size="sm"

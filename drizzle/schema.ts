@@ -151,3 +151,27 @@ export interface Explanation {
   wordingChanges: string[];
   atsImprovements: string[];
 }
+
+
+/**
+ * Tracks job applications and their outcomes
+ */
+export const applications = mysqlTable("applications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  customizationId: int("customizationId").notNull(),
+  companyName: varchar("companyName", { length: 255 }).notNull(),
+  roleName: varchar("roleName", { length: 255 }).notNull(),
+  status: mysqlEnum("status", ["applied", "interview", "offer", "rejected", "withdrawn"]).default("applied").notNull(),
+  appliedDate: timestamp("appliedDate").defaultNow().notNull(),
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+  notes: text("notes"),
+  interviewDate: timestamp("interviewDate"),
+  outcome: text("outcome"),
+  matchScore: int("matchScore"),
+  atsScore: int("atsScore"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Application = typeof applications.$inferSelect;
+export type InsertApplication = typeof applications.$inferInsert;
