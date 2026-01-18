@@ -90,6 +90,9 @@ export default function TemplateSelectionStep({ onComplete }: TemplateSelectionS
             roles
           </li>
           <li>
+            • <span className="font-medium">Professional Sidebar:</span> Two-column layout with profile photo, perfect for tech professionals
+          </li>
+          <li>
             • <span className="font-medium">Modern/Creative:</span> Great for design, marketing, and creative fields
           </li>
         </ul>

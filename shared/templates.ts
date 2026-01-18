@@ -3,7 +3,7 @@
  * All templates are ATS-safe with plain text structure
  */
 
-export type TemplateType = 'modern' | 'classic' | 'technical' | 'creative' | 'minimal';
+export type TemplateType = 'modern' | 'classic' | 'technical' | 'creative' | 'minimal' | 'professional-sidebar';
 
 export interface TemplateConfig {
   id: TemplateType;
@@ -102,6 +102,22 @@ export const TEMPLATES: Record<TemplateType, TemplateConfig> = {
       accent: '#4b5563', // Dark gray
     },
     atsScore: 100, // Perfect ATS score
+  },
+  'professional-sidebar': {
+    id: 'professional-sidebar',
+    name: 'Professional Sidebar',
+    description: 'Two-column layout with circular profile photo, contact info sidebar, and main content. Perfect for tech professionals.',
+    icon: '👤',
+    sectionSpacing: 'normal',
+    fontFamily: 'sans-serif',
+    headingStyle: 'bold-uppercase',
+    bulletStyle: 'dash',
+    colors: {
+      heading: '#000000', // Black
+      text: '#1f2937', // Dark gray
+      accent: '#374151', // Medium gray
+    },
+    atsScore: 94, // High ATS compatibility
   },
 };
 
