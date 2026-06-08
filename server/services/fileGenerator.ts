@@ -2,7 +2,7 @@ import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun } from 'docx';
 import { CustomizedResume } from '../../drizzle/schema';
 import { storagePut } from '../storage';
-import axios from 'axios';
+
 import { getTemplate, formatHeading, formatBullet, getSpacingMultiplier, type TemplateType } from '../../shared/templates';
 
 /**
@@ -27,8 +27,9 @@ export async function generateResumePDF(
   let photoBuffer: Buffer | undefined;
   if (photoUrl) {
     try {
-      const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
-      photoBuffer = Buffer.from(response.data);
+      const response = await fetch(photoUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      photoBuffer = Buffer.from(arrayBuffer);
     } catch (error) {
       console.error('Failed to fetch photo:', error);
     }
@@ -173,8 +174,9 @@ export async function generateResumeDOCX(
   let photoBuffer: Buffer | undefined;
   if (photoUrl) {
     try {
-      const response = await axios.get(photoUrl, { responseType: 'arraybuffer' });
-      photoBuffer = Buffer.from(response.data);
+      const response = await fetch(photoUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      photoBuffer = Buffer.from(arrayBuffer);
     } catch (error) {
       console.error('Failed to fetch photo for DOCX:', error);
     }

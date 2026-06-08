@@ -5,17 +5,11 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import Batch from "./pages/Batch";
-import Tracker from "./pages/Tracker";
 
 function Router() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/batch"} component={Batch} />
-      <Route path={"/tracker"} component={Tracker} />
       <Route path={"/404"} component={NotFound} />
       <Route component={NotFound} />
     </Switch>

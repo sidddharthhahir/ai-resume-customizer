@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: resume_customizer
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://root:${DB_PASSWORD:-changeme}@db:3306/resume_customizer
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      LLM_PROVIDER: ${LLM_PROVIDER:-gemini}
+      LLM_API_KEY: ${LLM_API_KEY}
+      LLM_MODEL: ${LLM_MODEL:-}
+      STORAGE_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
+  uploads_data:

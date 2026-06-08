@@ -5,10 +5,9 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "driz
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  name: text("name").notNull(),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -153,25 +152,4 @@ export interface Explanation {
 }
 
 
-/**
- * Tracks job applications and their outcomes
- */
-export const applications = mysqlTable("applications", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  customizationId: int("customizationId").notNull(),
-  companyName: varchar("companyName", { length: 255 }).notNull(),
-  roleName: varchar("roleName", { length: 255 }).notNull(),
-  status: mysqlEnum("status", ["applied", "interview", "offer", "rejected", "withdrawn"]).default("applied").notNull(),
-  appliedDate: timestamp("appliedDate").defaultNow().notNull(),
-  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
-  notes: text("notes"),
-  interviewDate: timestamp("interviewDate"),
-  outcome: text("outcome"),
-  matchScore: int("matchScore"),
-  atsScore: int("atsScore"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
 
-export type Application = typeof applications.$inferSelect;
-export type InsertApplication = typeof applications.$inferInsert;

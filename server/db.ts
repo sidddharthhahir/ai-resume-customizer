@@ -6,15 +6,12 @@ import {
   resumes, 
   jobDescriptions, 
   customizations,
-  applications,
   InsertResume,
   InsertJobDescription,
   InsertCustomization,
-  InsertApplication,
   Resume,
   JobDescription,
-  Customization,
-  Application
+  Customization
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -32,75 +29,53 @@ export async function getDb() {
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
+export async function createUser(user: InsertUser): Promise<{ id: number }> {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
+  if (!db) throw new Error("Database not available");
 
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+  const result = await db.insert(users).values(user);
+  const insertedId = Number(result[0].insertId);
+  return { id: insertedId };
 }
 
-export async function getUserByOpenId(openId: string) {
+export async function getUserById(id: number) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
+  if (!db) return undefined;
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createNewUser(data: { email: string; passwordHash: string; name: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(users).values({
+    email: data.email,
+    passwordHash: data.passwordHash,
+    name: data.name,
+    role: "user",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  } as any);
+  
+  const insertedId = Number(result[0].insertId);
+  return getUserById(insertedId);
+}
+
+export async function updateUserLastSignedIn(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
 }
 
 // Resume operations
@@ -223,70 +198,4 @@ export async function updateCustomizationFiles(
 }
 
 
-// Application tracking functions
-export async function createApplication(app: InsertApplication): Promise<Application> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
-  const result = await db.insert(applications).values(app);
-  const id = result[0].insertId as number;
-  const created = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
-  return created[0] as Application;
-}
-
-export async function getApplicationById(id: number): Promise<Application | undefined> {
-  const db = await getDb();
-  if (!db) return undefined;
-
-  const result = await db.select().from(applications).where(eq(applications.id, id)).limit(1);
-  return result[0];
-}
-
-export async function getUserApplications(userId: number): Promise<Application[]> {
-  const db = await getDb();
-  if (!db) return [];
-
-  return db.select().from(applications).where(eq(applications.userId, userId)).orderBy(desc(applications.appliedDate));
-}
-
-export async function updateApplicationStatus(
-  id: number,
-  status: string,
-  notes?: string,
-  outcome?: string
-): Promise<void> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  const updateData: any = { status, lastUpdated: new Date() };
-  if (notes !== undefined) updateData.notes = notes;
-  if (outcome !== undefined) updateData.outcome = outcome;
-
-  await db.update(applications).set(updateData).where(eq(applications.id, id));
-}
-
-export async function deleteApplication(id: number): Promise<void> {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  await db.delete(applications).where(eq(applications.id, id));
-}
-
-export async function getApplicationStats(userId: number): Promise<any> {
-  const db = await getDb();
-  if (!db) return { total: 0, applied: 0, interview: 0, offer: 0, rejected: 0, withdrawn: 0, successRate: 0 };
-
-  const apps = await db.select().from(applications).where(eq(applications.userId, userId));
-  
-  const stats = {
-    total: apps.length,
-    applied: apps.filter((a: any) => a.status === 'applied').length,
-    interview: apps.filter((a: any) => a.status === 'interview').length,
-    offer: apps.filter((a: any) => a.status === 'offer').length,
-    rejected: apps.filter((a: any) => a.status === 'rejected').length,
-    withdrawn: apps.filter((a: any) => a.status === 'withdrawn').length,
-    successRate: apps.length > 0 ? Math.round((apps.filter((a: any) => a.status === 'offer').length / apps.length) * 100) : 0,
-  };
-
-  return stats;
-}

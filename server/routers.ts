@@ -3,6 +3,9 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router, protectedProcedure } from "./_core/trpc";
 import { getDb } from "./db";
+import { SignJWT } from "jose";
+import bcrypt from "bcryptjs";
+import { ENV } from "./_core/env";
 import { customizations } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -18,11 +21,8 @@ import {
   getUserCustomizations,
   getCustomizationByResumeAndJob,
   updateCustomizationFiles,
-  createApplication,
-  getUserApplications,
-  updateApplicationStatus,
-  deleteApplication,
-  getApplicationStats
+  getUserByEmail,
+  createNewUser
 } from "./db";
 import { extractResumeText, parseResumeWithAI } from "./services/resumeParser";
 import { analyzeJobDescription } from "./services/jobAnalyzer";
@@ -48,6 +48,43 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    signup: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string().min(6),
+        name: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const existing = await getUserByEmail(input.email);
+        if (existing) throw new Error("Email already registered");
+        const passwordHash = await bcrypt.hash(input.password, 10);
+        const user = await createNewUser({ email: input.email, passwordHash, name: input.name });
+        const secret = new TextEncoder().encode(ENV.cookieSecret);
+        const token = await new SignJWT({ userId: user!.id })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("30d")
+          .sign(secret);
+        ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: 30 * 24 * 60 * 60 * 1000 });
+        return { id: user!.id, email: user!.email, name: user!.name };
+      }),
+    login: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        password: z.string(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const user = await getUserByEmail(input.email);
+        if (!user) throw new Error("Invalid email or password");
+        const valid = await bcrypt.compare(input.password, user.passwordHash);
+        if (!valid) throw new Error("Invalid email or password");
+        const secret = new TextEncoder().encode(ENV.cookieSecret);
+        const token = await new SignJWT({ userId: user.id })
+          .setProtectedHeader({ alg: "HS256" })
+          .setExpirationTime("30d")
+          .sign(secret);
+        ctx.res.cookie(COOKIE_NAME, token, { ...getSessionCookieOptions(ctx.req), maxAge: 30 * 24 * 60 * 60 * 1000 });
+        return { id: user.id, email: user.email, name: user.name };
+      }),
   }),
 
   resume: router({
@@ -306,43 +343,6 @@ export const appRouter = router({
         return getCustomizationByResumeAndJob(input.resumeId, input.jobId);
       }),
 
-    // Batch optimize multiple jobs
-    batchOptimize: protectedProcedure
-      .input(z.object({
-        resumeId: z.number(),
-        jobs: z.array(z.object({
-          id: z.string(),
-          companyName: z.string(),
-          roleName: z.string(),
-          description: z.string(),
-        })),
-        templateId: z.string().optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const resume = await getResumeById(input.resumeId);
-        if (!resume || resume.userId !== ctx.user.id) {
-          throw new Error('Resume not found or unauthorized');
-        }
-
-        const parsedResume = typeof resume.parsedContent === 'string' ? JSON.parse(resume.parsedContent) : resume.parsedContent;
-        const { processBatchOptimization, generateBatchComparison, extractCommonKeywords } = await import('./services/batchProcessor');
-        
-        const results = await processBatchOptimization(
-          parsedResume,
-          input.jobs,
-          input.templateId || 'classic'
-        );
-
-        const comparison = generateBatchComparison(results);
-        const commonKeywords = extractCommonKeywords(results);
-
-        return {
-          results,
-          comparison,
-          commonKeywords,
-        };
-      }),
-
     // Analyze ATS compatibility
     analyzeATS: protectedProcedure
       .input(z.object({
@@ -378,76 +378,6 @@ export const appRouter = router({
 
         return atsAnalysis;
       }),
-  }),
-
-  application: router({
-    create: protectedProcedure
-      .input(z.object({
-        customizationId: z.number(),
-        companyName: z.string(),
-        roleName: z.string(),
-        notes: z.string().optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const customization = await getCustomizationById(input.customizationId);
-        if (!customization || customization.userId !== ctx.user.id) {
-          throw new Error('Customization not found or unauthorized');
-        }
-
-        return createApplication({
-          userId: ctx.user.id,
-          customizationId: input.customizationId,
-          companyName: input.companyName,
-          roleName: input.roleName,
-          notes: input.notes || null,
-          status: 'applied',
-          matchScore: typeof customization.matchScore === 'object' ? (customization.matchScore as any).overallMatch : 0,
-          atsScore: 0,
-        } as any);
-      }),
-
-    list: protectedProcedure.query(async ({ ctx }) => {
-      return getUserApplications(ctx.user.id);
-    }),
-
-    updateStatus: protectedProcedure
-      .input(z.object({
-        applicationId: z.number(),
-        status: z.enum(['applied', 'interview', 'offer', 'rejected', 'withdrawn']),
-        notes: z.string().optional(),
-        outcome: z.string().optional(),
-      }))
-      .mutation(async ({ ctx, input }) => {
-        const db = await getDb();
-        if (!db) throw new Error('Database not available');
-
-        const app = await db.select().from(customizations).where(eq(customizations.id, input.applicationId)).limit(1);
-        if (!app || app[0].userId !== ctx.user.id) {
-          throw new Error('Application not found or unauthorized');
-        }
-
-        await updateApplicationStatus(input.applicationId, input.status, input.notes, input.outcome);
-        return { success: true };
-      }),
-
-    delete: protectedProcedure
-      .input(z.object({ applicationId: z.number() }))
-      .mutation(async ({ ctx, input }) => {
-        const db = await getDb();
-        if (!db) throw new Error('Database not available');
-
-        const app = await db.select().from(customizations).where(eq(customizations.id, input.applicationId)).limit(1);
-        if (!app || app[0].userId !== ctx.user.id) {
-          throw new Error('Application not found or unauthorized');
-        }
-
-        await deleteApplication(input.applicationId);
-        return { success: true };
-      }),
-
-    stats: protectedProcedure.query(async ({ ctx }) => {
-      return getApplicationStats(ctx.user.id);
-    }),
   }),
 });
 

@@ -1,14 +1,12 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getLoginUrl } from "@/const";
 import ResumeWizard from "@/components/ResumeWizard";
-import { Loader2, LogOut, Zap, BarChart3 } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { useLocation } from "wouter";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Home() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
-  const [, navigate] = useLocation();
+  const { user, loading, isAuthenticated } = useAuth();
   const logoutMutation = trpc.auth.logout.useMutation({
     onSuccess: () => {
       window.location.reload();
@@ -31,61 +29,13 @@ export default function Home() {
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-        <div className="text-center max-w-2xl px-4">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">AI Resume Customizer</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            Optimize your resume for any job with AI-powered customization while maintaining complete truthfulness
-          </p>
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center justify-center gap-3 text-gray-700">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span>AI-powered resume parsing and analysis</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-gray-700">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span>Job-specific resume customization</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-gray-700">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span>Professional cover letter generation</span>
-            </div>
-            <div className="flex items-center justify-center gap-3 text-gray-700">
-              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-              <span>Download in PDF and DOCX formats</span>
-            </div>
-          </div>
-          <Button asChild size="lg" className="text-lg px-8">
-            <a href={getLoginUrl()}>Get Started</a>
-          </Button>
-        </div>
-      </div>
-    );
+    return <LoginPage onSuccess={() => window.location.reload()} />;
   }
 
   return (
     <div className="relative">
       {/* Header buttons */}
       <div className="absolute top-4 right-4 z-10 flex gap-2 flex-wrap justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/tracker')}
-          className="flex items-center gap-2"
-        >
-          <BarChart3 className="w-4 h-4" />
-          Tracker
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate('/batch')}
-          className="flex items-center gap-2"
-        >
-          <Zap className="w-4 h-4" />
-          Batch Optimize
-        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -103,6 +53,101 @@ export default function Home() {
       </div>
 
       <ResumeWizard />
+    </div>
+  );
+}
+
+function LoginPage({ onSuccess }: { onSuccess: () => void }) {
+  const [tab, setTab] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const loginMutation = trpc.auth.login.useMutation({
+    onSuccess: () => onSuccess(),
+    onError: (e) => setError(e.message),
+  });
+  const signupMutation = trpc.auth.signup.useMutation({
+    onSuccess: () => onSuccess(),
+    onError: (e) => setError(e.message),
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (tab === "login") loginMutation.mutate({ email, password });
+    else signupMutation.mutate({ email, password, name });
+  };
+
+  const isPending = loginMutation.isPending || signupMutation.isPending;
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="bg-white rounded-2xl shadow-lg p-8 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">AI Resume Customizer</h1>
+        <p className="text-center text-gray-500 text-sm mb-6">Optimize your resume for any job</p>
+        
+        <div className="flex gap-2 mb-6 border-b">
+          <button
+            onClick={() => setTab("login")}
+            className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+              tab === "login"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500"
+            }`}
+          >
+            Login
+          </button>
+          <button
+            onClick={() => setTab("signup")}
+            className={`pb-2 px-1 text-sm font-medium border-b-2 transition-colors ${
+              tab === "signup"
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500"
+            }`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {tab === "signup" && (
+            <input
+              type="text"
+              placeholder="Your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          )}
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={isPending}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 text-sm font-medium disabled:opacity-50 transition-colors"
+          >
+            {isPending ? "Please wait..." : tab === "login" ? "Login" : "Create Account"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
