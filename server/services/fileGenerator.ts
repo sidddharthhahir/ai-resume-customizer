@@ -119,7 +119,7 @@ export async function generateResumePDF(
         doc.moveDown(0.3);
 
         exp.bullets.forEach((bullet) => {
-          doc.fontSize(11).font('Helvetica').text(`• ${bullet.revised}`, { indent: 20 });
+          doc.fontSize(11).font('Helvetica').text(formatBullet(bullet.revised, template), { indent: 20 });
         });
         doc.moveDown();
       });
@@ -276,7 +276,7 @@ export async function generateResumeDOCX(
       exp.bullets.forEach((bullet) => {
         sections.push(
           new Paragraph({
-            text: `• ${bullet.revised}`,
+            text: formatBullet(bullet.revised, template),
             spacing: { after: 50 },
           })
         );

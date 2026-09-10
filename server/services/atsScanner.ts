@@ -1,5 +1,21 @@
 import { invokeLLM } from '../_core/llm';
 
+interface ResumeForATS {
+  summary?: string;
+  skills: string[];
+  experience: Array<{
+    title: string;
+    company: string;
+    description: string;
+    bullets: string[];
+  }>;
+  education: Array<{
+    school: string;
+    degree: string;
+    field: string;
+  }>;
+}
+
 export interface ATSAnalysis {
   atsScore: number;
   keywordAnalysis: {
@@ -21,27 +37,11 @@ export interface ATSAnalysis {
  * Returns score, keyword gaps, formatting warnings, and safe suggestions
  */
 export async function analyzeATSCompatibility(
-  resume: {
-    summary?: string;
-    skills: string[];
-    experience: Array<{
-      title: string;
-      company: string;
-      description: string;
-      bullets: string[];
-    }>;
-    education: Array<{
-      school: string;
-      degree: string;
-      field: string;
-    }>;
-  },
+  resume: ResumeForATS,
   jobDescription: string
 ): Promise<ATSAnalysis> {
-  // Extract text from resume for analysis
   const resumeText = buildResumeText(resume);
 
-  // Use LLM to perform comprehensive ATS analysis
   const response = await invokeLLM({
     messages: [
       {
@@ -172,7 +172,6 @@ Be realistic - most resumes score 60-85.`,
     },
   });
 
-  // Parse the response
   const content = response.choices[0]?.message.content;
   if (!content || typeof content !== 'string') {
     throw new Error('Failed to get ATS analysis from LLM');
@@ -180,30 +179,13 @@ Be realistic - most resumes score 60-85.`,
 
   const analysis = JSON.parse(content) as ATSAnalysis;
 
-  // Validate that suggestions don't add new skills
+  // LLM-authored suggestions can drift; flag (don't reject) any that introduce unverified skills
   validateSuggestions(analysis.suggestions, resume);
 
   return analysis;
 }
 
-/**
- * Builds plain text representation of resume for analysis
- */
-function buildResumeText(resume: {
-  summary?: string;
-  skills: string[];
-  experience: Array<{
-    title: string;
-    company: string;
-    description: string;
-    bullets: string[];
-  }>;
-  education: Array<{
-    school: string;
-    degree: string;
-    field: string;
-  }>;
-}): string {
+function buildResumeText(resume: ResumeForATS): string {
   const parts: string[] = [];
 
   if (resume.summary) {
@@ -238,40 +220,20 @@ function buildResumeText(resume: {
   return parts.join('\n');
 }
 
-/**
- * Validates that suggestions don't introduce new skills
- */
 function validateSuggestions(
   suggestions: Array<{
     original: string;
     suggestion: string;
     reason: string;
   }>,
-  resume: {
-    summary?: string;
-    skills: string[];
-    experience: Array<{
-      title: string;
-      company: string;
-      description: string;
-      bullets: string[];
-    }>;
-    education: Array<{
-      school: string;
-      degree: string;
-      field: string;
-    }>;
-  }
+  resume: ResumeForATS
 ): void {
-  // Extract all skills and technologies mentioned in resume
   const resumeContent = buildResumeText(resume).toLowerCase();
   const skillsList = resume.skills.map((s) => s.toLowerCase());
 
-  // Check each suggestion
   for (const suggestion of suggestions) {
     const suggestionLower = suggestion.suggestion.toLowerCase();
 
-    // Look for new technical terms that weren't in original
     const newTerms = extractTechnicalTerms(suggestionLower).filter(
       (term) =>
         !resumeContent.includes(term) &&
@@ -279,18 +241,13 @@ function validateSuggestions(
     );
 
     if (newTerms.length > 0) {
-      // Log warning but don't throw - LLM might have introduced new terms
       const termsStr = newTerms.join(', ');
       console.warn(`[ATS] Suggestion may introduce new terms: ${termsStr}`);
     }
   }
 }
 
-/**
- * Extracts technical terms from text
- */
 function extractTechnicalTerms(text: string): string[] {
-  // Look for common programming languages, frameworks, tools
   const technicalPattern =
     /\b(python|javascript|typescript|java|c\+\+|react|angular|vue|node|express|django|flask|spring|kubernetes|docker|aws|azure|gcp|sql|mongodb|postgresql|redis|elasticsearch|kafka|git|jenkins|terraform|ansible|ci\/cd|rest|graphql|microservices|serverless|lambda|ec2|s3|rds|dynamodb|cloudformation|terraform|ansible|prometheus|grafana|datadog|new relic|splunk)\b/gi;
 
@@ -300,24 +257,10 @@ function extractTechnicalTerms(text: string): string[] {
 }
 
 /**
- * Generates safe optimization suggestions using LLM
+ * Rewords a resume for ATS keyword visibility without adding skills. Not yet wired to a route.
  */
 export async function generateSafeOptimizations(
-  resume: {
-    summary?: string;
-    skills: string[];
-    experience: Array<{
-      title: string;
-      company: string;
-      description: string;
-      bullets: string[];
-    }>;
-    education: Array<{
-      school: string;
-      degree: string;
-      field: string;
-    }>;
-  },
+  resume: ResumeForATS,
   jobDescription: string
 ): Promise<string> {
   const resumeText = buildResumeText(resume);

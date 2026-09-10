@@ -88,7 +88,6 @@ export const appRouter = router({
   }),
 
   resume: router({
-    // Upload and parse resume
     upload: protectedProcedure
       .input(z.object({
         fileName: z.string(),
@@ -96,20 +95,14 @@ export const appRouter = router({
         mimeType: z.string(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Decode base64 file data
         const buffer = Buffer.from(input.fileData, 'base64');
-        
-        // Upload to S3
+
         const fileKey = `resumes/${ctx.user.id}/${Date.now()}_${input.fileName}`;
         const { url: fileUrl, key } = await storagePut(fileKey, buffer, input.mimeType);
-        
-        // Extract text from file
+
         const resumeText = await extractResumeText(buffer, input.mimeType);
-        
-        // Parse with AI
         const parsedContent = await parseResumeWithAI(resumeText);
-        
-        // Save to database
+
         const resume = await createResume({
           userId: ctx.user.id,
           originalFileName: input.fileName,
@@ -117,16 +110,14 @@ export const appRouter = router({
           fileKey: key,
           parsedContent,
         });
-        
+
         return resume;
       }),
 
-    // Get user's resumes
     list: protectedProcedure.query(async ({ ctx }) => {
       return getUserResumes(ctx.user.id);
     }),
 
-    // Get specific resume
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -135,7 +126,6 @@ export const appRouter = router({
   }),
 
   job: router({
-    // Create and analyze job description
     create: protectedProcedure
       .input(z.object({
         description: z.string(),
@@ -143,10 +133,8 @@ export const appRouter = router({
         roleName: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Analyze job description with AI
         const analysis = await analyzeJobDescription(input.description);
-        
-        // Save to database
+
         const job = await createJobDescription({
           userId: ctx.user.id,
           description: input.description,
@@ -154,16 +142,14 @@ export const appRouter = router({
           roleName: input.roleName || null,
           analysis,
         });
-        
+
         return job;
       }),
 
-    // Get user's job descriptions
     list: protectedProcedure.query(async ({ ctx }) => {
       return getUserJobDescriptions(ctx.user.id);
     }),
 
-    // Get specific job description
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -172,7 +158,6 @@ export const appRouter = router({
   }),
 
   customization: router({
-    // Upload profile photo
     uploadPhoto: protectedProcedure
       .input(z.object({
         fileName: z.string(),
@@ -180,27 +165,22 @@ export const appRouter = router({
         mimeType: z.string(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Validate mime type
         if (!['image/jpeg', 'image/jpg', 'image/png'].includes(input.mimeType)) {
           throw new Error('Only JPG and PNG images are supported');
         }
 
-        // Decode base64 file data
         const buffer = Buffer.from(input.fileData, 'base64');
-        
-        // Validate file size (max 5MB)
         if (buffer.length > 5 * 1024 * 1024) {
           throw new Error('Photo size must be less than 5MB');
         }
-        
-        // Upload to S3
+
         const fileKey = `photos/${ctx.user.id}/${Date.now()}_${input.fileName}`;
         const { url: photoUrl, key: photoKey } = await storagePut(fileKey, buffer, input.mimeType);
-        
+
         return { photoUrl, photoKey };
       }),
 
-    // Create full customization (match + customize + cover letter)
+    // Runs match scoring, resume customization, and cover letter generation in one step
     create: protectedProcedure
       .input(z.object({
         resumeId: z.number(),
@@ -211,37 +191,32 @@ export const appRouter = router({
         photoKey: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        // Get resume and job
         const resume = await getResumeById(input.resumeId);
         const job = await getJobDescriptionById(input.jobId);
-        
+
         if (!resume || !job) {
           throw new Error('Resume or job not found');
         }
-        
+
         if (!job.analysis) {
           throw new Error('Job analysis not available');
         }
-        
-        // Calculate match score
+
         const matchScore = await calculateMatchScore(resume.parsedContent, job.analysis);
-        
-        // Customize resume
+
         const { customized, explanation } = await customizeResume(
           resume.parsedContent,
           job.analysis,
           job.description
         );
-        
-        // Generate cover letter
+
         const coverLetter = await generateCoverLetter(
           resume.parsedContent,
           job.description,
           job.companyName || 'the company',
           job.roleName || 'this position'
         );
-        
-        // Save customization
+
         const customization = await createCustomization({
           userId: ctx.user.id,
           resumeId: input.resumeId,
@@ -263,27 +238,25 @@ export const appRouter = router({
         return customization;
       }),
 
-    // Generate downloadable files
     generateFiles: protectedProcedure
       .input(z.object({
         customizationId: z.number(),
       }))
       .mutation(async ({ input }) => {
         const customization = await getCustomizationById(input.customizationId);
-        
+
         if (!customization) {
           throw new Error('Customization not found');
         }
-        
+
         const job = await getJobDescriptionById(customization.jobId);
         if (!job) {
           throw new Error('Job not found');
         }
-        
+
         const companyName = job.companyName || 'Company';
         const roleName = job.roleName || 'Role';
-        
-        // Generate all files
+
         const photoUrl = customization.includePhoto ? customization.photoUrl || undefined : undefined;
         const [resumePdf, resumeDocx, coverLetterPdf, coverLetterDocx] = await Promise.all([
           generateResumePDF(customization.customizedResume, companyName, roleName, photoUrl),
@@ -291,8 +264,7 @@ export const appRouter = router({
           generateCoverLetterPDF(customization.coverLetter, companyName, roleName),
           generateCoverLetterDOCX(customization.coverLetter, companyName, roleName),
         ]);
-        
-        // Update customization with file URLs
+
         await updateCustomizationFiles(customization.id, {
           resumePdfUrl: resumePdf.url,
           resumeDocxUrl: resumeDocx.url,
@@ -308,12 +280,10 @@ export const appRouter = router({
         };
       }),
 
-    // Get user's customizations
     list: protectedProcedure.query(async ({ ctx }) => {
       return getUserCustomizations(ctx.user.id);
     }),
 
-    // Get specific customization
     get: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -329,11 +299,10 @@ export const appRouter = router({
         }
         const db = await getDb();
         if (!db) throw new Error('Database not available');
-        await db.delete(customizations).where(eq(customizations.id, input.id as any));
+        await db.delete(customizations).where(eq(customizations.id, input.id));
         return { success: true };
       }),
 
-    // Get customization by resume and job
     getByResumeAndJob: protectedProcedure
       .input(z.object({
         resumeId: z.number(),
@@ -343,7 +312,6 @@ export const appRouter = router({
         return getCustomizationByResumeAndJob(input.resumeId, input.jobId);
       }),
 
-    // Analyze ATS compatibility
     analyzeATS: protectedProcedure
       .input(z.object({
         customizationId: z.number(),
@@ -359,7 +327,6 @@ export const appRouter = router({
           throw new Error('Job description not found');
         }
 
-        // Analyze ATS compatibility
         const resumeData = {
           summary: customization.customizedResume.summary?.revised || customization.customizedResume.summary?.original,
           skills: customization.customizedResume.skills,

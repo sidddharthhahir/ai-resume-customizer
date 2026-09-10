@@ -1,15 +1,14 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
 
-const templateRoot = path.resolve(import.meta.dirname);
+const rootDir = path.resolve(import.meta.dirname);
 
 export default defineConfig({
-  root: templateRoot,
+  root: rootDir,
   resolve: {
     alias: {
-      "@": path.resolve(templateRoot, "client", "src"),
-      "@shared": path.resolve(templateRoot, "shared"),
-      "@assets": path.resolve(templateRoot, "attached_assets"),
+      "@": path.resolve(rootDir, "client", "src"),
+      "@shared": path.resolve(rootDir, "shared"),
     },
   },
   test: {

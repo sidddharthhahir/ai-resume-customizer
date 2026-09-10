@@ -98,8 +98,8 @@ export default function ResumePreview({ resume, templateId, photoUrl }: ResumePr
                     {exp.bullets.map((bullet, bidx) => {
                       const bulletText = typeof bullet === 'string' ? bullet : bullet.revised;
                       return (
-                        <li key={bidx} className="list-disc text-xs">
-                          {bulletText}
+                        <li key={bidx} className="list-none text-xs">
+                          {formatBullet(bulletText, template)}
                         </li>
                       );
                     })}

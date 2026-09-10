@@ -2,11 +2,10 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FileText, Mail, Lightbulb, Eye, Zap } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import ResumePreview from '../ResumePreview';
 import ATSScanner from '../ATSScanner';
-import { trpc } from '@/lib/trpc';
 import type { Customization } from '../../../../drizzle/schema';
+import type { TemplateType } from '@shared/templates';
 
 interface ResumePreviewStepProps {
   customization: Customization;
@@ -44,7 +43,7 @@ export default function ResumePreviewStep({ customization }: ResumePreviewStepPr
         <TabsContent value="preview" className="mt-4">
           <ResumePreview
             resume={customizedResume}
-            templateId={(customization.templateId as any) || 'classic'}
+            templateId={(customization.templateId as TemplateType) || 'classic'}
             photoUrl={customization.photoUrl || undefined}
           />
         </TabsContent>

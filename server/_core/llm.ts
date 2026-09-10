@@ -223,7 +223,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   const payload: Record<string, unknown> = {
     model: config.model,
     messages: params.messages.map(normalizeMessage),
-    max_tokens: 32768,
+    max_tokens: params.maxTokens ?? params.max_tokens ?? 32768,
   };
   
   if (params.tools && params.tools.length > 0) {
